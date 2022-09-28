@@ -1,20 +1,25 @@
-import tweepy
 import requests
 import json
 import gspread
-# from credentials import *
-# from access import access_token, access_token_secret
+from credentials import *
 import random
 import sys
-from os import environ
 
-consumer_key = environ['API_KEY']
-bearer_token = environ['BEARER_TOKEN']
-consumer_secret = environ['API_SECRET_KEY']
-access_token = environ['ACCESS_TOKEN']
-access_token_secret = environ['ACCESS_TOKEN_SECRET']
 
-url = "https://docs.google.com/spreadsheets/d/11OTeOnK-QuCrvYfEiNXQ3CGOz3YOIvCzNbpomVZIi5E/htmlview"
+# The impoted twitter api keys from credentials.py
+
+consumer_key = ['API_KEY']
+bearer_token = ['BEARER_TOKEN']
+consumer_secret = ['API_SECRET_KEY']
+access_token = ['ACCESS_TOKEN']
+access_token_secret = ['ACCESS_TOKEN_SECRET']
+
+# Enter google sheets url here
+
+google_url = ()
+
+
+# Twitter Api Authorization using the Bearer Token
 
 def bearer_oauth(r):
     """
@@ -26,16 +31,20 @@ def bearer_oauth(r):
     return r
 
 
+# Get and parse the google sheets file using the google cloud project api and gspread
+# The client secret is stored in a json file
+
 def get_sheet():
     gc = gspread.service_account(filename='client_secrets.json')
 
-    sht1 = gc.open_by_key('11OTeOnK-QuCrvYfEiNXQ3CGOz3YOIvCzNbpomVZIi5E')
+    sht1 = gc.open_by_key(google_cloud_project_api_key)
 
     worksheet = sht1.get_worksheet(0)
     values_list = worksheet.col_values(1)[2:]
     return values_list
 
 
+# Get the twitter api stream function rules
 
 def get_rules():
     response = requests.get(
@@ -48,6 +57,8 @@ def get_rules():
     print(json.dumps(response.json()))
     return response.json()
 
+
+# Flush and delete the existing twitter api stream function rules
 
 def delete_all_rules(rules):
     if rules is None or "data" not in rules:
@@ -69,10 +80,15 @@ def delete_all_rules(rules):
     print(json.dumps(response.json()))
 
 
+"""
+Set the twitter api stream function rules
+For this you'll need the bot account username and the bot command
+"""
+
 def set_rules(delete):
     # You can adjust the rules if needed
     sample_rules = [
-        {"value": ("@wgmi_bot wgmi? -is:retweet -from:wgmi_bot"), "tag": "conditions met"},
+        {"value": ("@{bot_account_username} {bot_command} -is:retweet -from:{bot_account_username}"), "tag": "conditions met"},
     ]
     payload = {"add": sample_rules}
     response = requests.post(
@@ -86,6 +102,11 @@ def set_rules(delete):
         )
     print(json.dumps(response.json()))
 
+    
+"""
+Stream live tweets from twitter
+This function returns the tweet(id and the username of the tweet author
+"""
 
 def get_stream(set):
     response = requests.get(
@@ -106,7 +127,9 @@ def get_stream(set):
             username = f"@{json_response['includes']['users'][0]['username']}"
             tweet_id = int(data['id'])
             return json_r, tweet_id, username
+        
 
+# Upload image to twitter and get the media id
 
 def upload(media):
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -119,22 +142,33 @@ def upload(media):
     return media_id
 
 
+""" 
+Tweet functions for the various results.
+This will be used to select the response based on if the account is present in the google sheets
+"""
+
 def tweet1(tweet_id, media_id):
     api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
-    api.create_tweet(in_reply_to_tweet_id=tweet_id, text=f'Congratulations! You made it.\n You can confirm in: {url}', media_ids=[media_id])
+    api.create_tweet(in_reply_to_tweet_id=tweet_id, text="Enter text here", media_ids=[media_id])
 
 def tweet2(tweet_id, media_id):
     api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
-    api.create_tweet(in_reply_to_tweet_id=tweet_id, text="Yes, you'll make it eventually.\n Keep trying.", media_ids=[media_id])
-
-def tweet3(tweet_id, media_id):
-    api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
-    api.create_tweet(in_reply_to_tweet_id=tweet_id, text='No.', media_ids=[media_id])
-
-def tweet4(tweet_id, media_id):
-    api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
-    api.create_tweet(in_reply_to_tweet_id=tweet_id, text='Who knows, Maybe!?', media_ids=[media_id])
+    api.create_tweet(in_reply_to_tweet_id=tweet_id, text="Enter text here", media_ids=[media_id])
     
+    
+# Depending on the number of options you have
+
+# def tweet1(tweet_id, media_id):
+#     api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
+#     api.create_tweet(in_reply_to_tweet_id=tweet_id, text="Enter text here", media_ids=[media_id])
+
+# def tweet2(tweet_id, media_id):
+#     api = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret, return_type=dict)
+#     api.create_tweet(in_reply_to_tweet_id=tweet_id, text="Enter text here", media_ids=[media_id])
+    
+    
+
+# This can be used to get the username of the tweet author 
 
 # def get_username(author_id):
 #     user_id = author_id
@@ -157,19 +191,21 @@ def main():
     while True:
         full_tweet, my_id, username = get_stream(set)
         if username in sheet:
-            up = upload("in.gif")
+            up = upload("image1.gif")
             tweets = tweet1(my_id, up)
         else:
             twt = random.choice(rand)
             if twt == 0:
-                up = upload("yes.gif")
+                up = upload("image2.gif")
                 tweets = tweet2(my_id, up)
-            elif twt == 1:
-                up = upload("NO.gif")
-                tweets = tweet3(my_id, up)
-            elif twt == 2:
-                up = upload("maybe.gif")
-                tweets = tweet4(my_id, up)
+                
+# This depends on the number of options you have.
+#             elif twt == 1:
+#                 up = upload("image3.gif")
+#                 tweets = tweet3(my_id, up)
+#             elif twt == 2:
+#                 up = upload("image4.gif")
+#                 tweets = tweet4(my_id, up)
 
 
 if __name__ == "__main__":
