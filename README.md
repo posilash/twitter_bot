@@ -8,6 +8,8 @@ Requirement:
   - Gspread python module
   - Google cloud project api and credentials
   
+You will also need several image files (named accordingly i.e image1.jpg, image2.jpg etc in the project folder) to be twitted as response.
+  
 Example:
 A twitter account mentions the bot account @{twitter_bot_username} {insert specified command here}
 
