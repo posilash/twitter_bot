@@ -10,3 +10,6 @@ Requirement:
   
 Example:
 A twitter account mentions the bot account @{twitter_bot_username} {insert specified command here}
+
+
+P.S: This project was hosted with heroku but can also be hosted with AWS or Google cloud.
