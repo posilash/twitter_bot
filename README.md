@@ -4,7 +4,7 @@ A twitter bot that reads the message after the twitterbot account is mentioned, 
 This project uses the twitter api to interact with twitter and the python gspread module to interact with google sheets.
 
 Requirement:
-  - Twitter api access and credentions
+  - Twitter api access and credentials
   - Gspread python module
   - Google cloud project api and credentials
   
